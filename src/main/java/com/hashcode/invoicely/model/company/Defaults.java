@@ -1,4 +1,4 @@
-package com.hashcode.invoicely.model;
+package com.hashcode.invoicely.model.company;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

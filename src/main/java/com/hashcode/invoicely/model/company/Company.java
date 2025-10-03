@@ -1,5 +1,6 @@
-package com.hashcode.invoicely.model;
+package com.hashcode.invoicely.model.company;
 
+import com.hashcode.invoicely.model.common.Address;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,6 @@ public class Company {
     private String industry;
     private String classification;
     private Address address;
-    private String logoUrl;
+    private Branding branding;
     private Defaults defaults;
 }

@@ -1,4 +1,4 @@
-package com.hashcode.invoicely.model;
+package com.hashcode.invoicely.model.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,4 +14,5 @@ public class Address {
     private String county;
     private String postcode;
     private String country;
+    private String pinCode;
 }
