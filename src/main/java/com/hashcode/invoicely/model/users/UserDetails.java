@@ -1,5 +1,6 @@
 package com.hashcode.invoicely.model.users;
 
+import com.hashcode.invoicely.model.common.Contact;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,8 +11,7 @@ import lombok.Setter;
 public class UserDetails {
     private String firstName;
     private String lastName;
-    private String email;
-    private String phone;
+    private Contact contact;
     private String emailSignature;
     private String OAuthEmail;
     private boolean mfaEnabled;
