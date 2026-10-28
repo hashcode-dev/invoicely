@@ -48,6 +48,9 @@ public class ExpenseEntity {
     @Column(name = "purchase_order_id")
     private UUID purchaseOrderId;
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(name = "number", nullable = false, length = 128)
     private String number;
 

@@ -92,6 +92,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PDF Document Generation -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.4</version>
+        </dependency>
+
         <!-- Developer Tooling -->
         <dependency>
             <groupId>org.projectlombok</groupId>

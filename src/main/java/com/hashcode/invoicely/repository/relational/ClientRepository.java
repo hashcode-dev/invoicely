@@ -22,4 +22,6 @@ public interface ClientRepository extends JpaRepository<ClientEntity, UUID>, Jpa
     List<ClientEntity> findByCompanyIdAndIdIn(UUID companyId, List<UUID> ids);
 
     Page<ClientEntity> findByCompanyId(UUID companyId, Pageable pageable);
+
+    List<ClientEntity> findByCompanyIdAndIsDeletedFalse(UUID companyId);
 }

@@ -41,6 +41,9 @@ public class InvoiceEntity {
     @Column(name = "recurring_id")
     private UUID recurringId;
 
+    @Column(name = "project_id")
+    private UUID projectId;
+
     @Column(name = "number", nullable = false, length = 128)
     private String number;
 
