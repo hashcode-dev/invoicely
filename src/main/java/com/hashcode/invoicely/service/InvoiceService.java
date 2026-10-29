@@ -69,11 +69,11 @@ public class InvoiceService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // Return all
             } else if (StringUtils.hasText(status)) {
-                predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
-                predicates.add(cb.isFalse(root.get("isDeleted")));
+                if (!"all".equalsIgnoreCase(status)) {
+                    predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
+                    predicates.add(cb.isFalse(root.get("isDeleted")));
+                }
             } else {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
@@ -201,7 +201,6 @@ public class InvoiceService {
 
         InvoiceEntity saved = invoiceRepository.save(entity);
 
-        // Update client balance
         client.setBalance(client.getBalance().add(saved.getBalance()));
         clientRepository.save(client);
 
@@ -260,7 +259,6 @@ public class InvoiceService {
 
         InvoiceEntity updated = invoiceRepository.save(entity);
 
-        // Adjust client balance difference
         BigDecimal balanceDiff = updated.getBalance().subtract(oldBalance);
         if (balanceDiff.compareTo(BigDecimal.ZERO) != 0) {
             clientRepository.findByCompanyIdAndId(companyId, updated.getClientId()).ifPresent(c -> {
@@ -371,7 +369,6 @@ public class InvoiceService {
         entity.setBalance(BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP));
         InvoiceEntity saved = invoiceRepository.save(entity);
 
-        // Update client balance
         clientRepository.findByCompanyIdAndId(companyId, entity.getClientId()).ifPresent(c -> {
             c.setBalance(c.getBalance().subtract(originalBalance));
             c.setPaidToDate(c.getPaidToDate().add(originalBalance));
@@ -492,7 +489,6 @@ public class InvoiceService {
             }
         }
 
-        // Invoice-level discount
         BigDecimal invDiscount = entity.getDiscount() != null ? entity.getDiscount() : BigDecimal.ZERO;
         BigDecimal invDiscountAmount = entity.isAmountDiscount()
                 ? invDiscount
@@ -500,7 +496,6 @@ public class InvoiceService {
 
         BigDecimal discountedSubtotal = subtotal.subtract(invDiscountAmount).max(BigDecimal.ZERO);
 
-        // Invoice-level taxes
         BigDecimal it1 = entity.getTaxRate1() != null ? entity.getTaxRate1() : BigDecimal.ZERO;
         BigDecimal it2 = entity.getTaxRate2() != null ? entity.getTaxRate2() : BigDecimal.ZERO;
         BigDecimal it3 = entity.getTaxRate3() != null ? entity.getTaxRate3() : BigDecimal.ZERO;

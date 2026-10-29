@@ -9,7 +9,6 @@ import com.hashcode.invoicely.dto.document.PartsDto;
 import com.hashcode.invoicely.dto.document.SetDefaultDesignRequest;
 import com.hashcode.invoicely.entity.relational.DesignEntity;
 import com.hashcode.invoicely.repository.relational.DesignRepository;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,9 +77,7 @@ public class DesignService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // all
-            } else {
+            } else if (!"all".equalsIgnoreCase(status)) {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
             }

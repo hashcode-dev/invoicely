@@ -202,7 +202,6 @@ public class PaymentService {
                 .isDeleted(false)
                 .build();
 
-        // Process invoice allocations
         for (PaymentInvoiceAllocationRequest alloc : allocations) {
             if (alloc.getInvoiceId() == null || alloc.getAmount() == null || alloc.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
@@ -213,7 +212,6 @@ public class PaymentService {
 
             BigDecimal allocAmount = alloc.getAmount().setScale(4, RoundingMode.HALF_UP);
 
-            // Update invoice balance and paidToDate
             BigDecimal newBalance = invoice.getBalance().subtract(allocAmount);
             if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
                 newBalance = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
@@ -238,7 +236,6 @@ public class PaymentService {
             payment.addPaymentable(paymentable);
         }
 
-        // Client ledger updates
         BigDecimal newClientBalance = client.getBalance().subtract(appliedAmount);
         if (newClientBalance.compareTo(BigDecimal.ZERO) < 0) {
             newClientBalance = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
@@ -246,7 +243,6 @@ public class PaymentService {
         client.setBalance(newClientBalance);
         client.setPaidToDate(client.getPaidToDate().add(paymentAmount));
 
-        // Excess payment credited to client
         if (paymentAmount.compareTo(appliedAmount) > 0) {
             BigDecimal unallocatedCredit = paymentAmount.subtract(appliedAmount);
             client.setCreditBalance(client.getCreditBalance().add(unallocatedCredit));
@@ -275,7 +271,6 @@ public class PaymentService {
 
         BigDecimal maxRefundable = payment.getAmount().subtract(payment.getRefunded());
 
-        // Determine total refund requested
         BigDecimal totalRefundRequested = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
         if (request.getInvoices() != null && !request.getInvoices().isEmpty()) {
             for (PaymentInvoiceAllocationRequest alloc : request.getInvoices()) {
@@ -297,7 +292,6 @@ public class PaymentService {
             throw new IllegalArgumentException(String.format("Refund amount (%s) exceeds refundable balance (%s)", totalRefundRequested, maxRefundable));
         }
 
-        // Process refund against specific invoices if provided
         if (request.getInvoices() != null && !request.getInvoices().isEmpty()) {
             for (PaymentInvoiceAllocationRequest alloc : request.getInvoices()) {
                 if (alloc.getInvoiceId() == null || alloc.getAmount() == null || alloc.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
@@ -326,13 +320,11 @@ public class PaymentService {
                 }
                 invoiceRepository.save(invoice);
 
-                // Restore client balance
                 client.setBalance(client.getBalance().add(invoiceRefund));
                 BigDecimal newClientPaid = client.getPaidToDate().subtract(invoiceRefund);
                 client.setPaidToDate(newClientPaid.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP) : newClientPaid);
             }
         } else {
-            // General amount refund across existing paymentables
             BigDecimal remainingToRefund = totalRefundRequested;
             for (PaymentableEntity paymentable : payment.getPaymentables()) {
                 BigDecimal availableOnPaymentable = paymentable.getAmount().subtract(paymentable.getRefunded());
@@ -365,7 +357,6 @@ public class PaymentService {
                 }
             }
 
-            // If remaining refund came from excess credit rather than invoice allocations
             if (remainingToRefund.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal uncredit = remainingToRefund.min(client.getCreditBalance());
                 client.setCreditBalance(client.getCreditBalance().subtract(uncredit));

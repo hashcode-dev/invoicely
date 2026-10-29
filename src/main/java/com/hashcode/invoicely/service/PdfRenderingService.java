@@ -25,20 +25,17 @@ public class PdfRenderingService {
             document.addPage(page);
 
             try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                // Header Title
                 content.beginText();
                 content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 18);
                 content.newLineAtOffset(50, 780);
                 content.showText(title != null ? title : "Invoicely Document");
                 content.endText();
 
-                // Horizontal Rule
                 content.setLineWidth(1.0f);
                 content.moveTo(50, 765);
                 content.lineTo(550, 765);
                 content.stroke();
 
-                // Body content lines
                 content.beginText();
                 content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 12);
                 content.newLineAtOffset(50, 730);
@@ -62,7 +59,6 @@ public class PdfRenderingService {
                 }
                 content.endText();
 
-                // Footer
                 content.beginText();
                 content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE), 9);
                 content.newLineAtOffset(50, 40);

@@ -74,11 +74,11 @@ public class QuoteService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // all
             } else if (StringUtils.hasText(status)) {
-                predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
-                predicates.add(cb.isFalse(root.get("isDeleted")));
+                if (!"all".equalsIgnoreCase(status)) {
+                    predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
+                    predicates.add(cb.isFalse(root.get("isDeleted")));
+                }
             } else {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
@@ -276,7 +276,6 @@ public class QuoteService {
         quote.setInvoiceId(savedInvoice.getId());
         quoteRepository.save(quote);
 
-        // Update client balance with new converted invoice
         clientRepository.findByCompanyIdAndId(companyId, quote.getClientId()).ifPresent(c -> {
             c.setBalance(c.getBalance().add(savedInvoice.getBalance()));
             clientRepository.save(c);

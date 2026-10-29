@@ -44,7 +44,6 @@ public class InvoicelyDocsService {
                 ? file.getContentType()
                 : "application/pdf";
 
-        // Simulated AI Document OCR Extraction Pipeline
         Map<String, Object> extractedFields = new LinkedHashMap<>();
         extractedFields.put("vendor_name", "Acme Enterprise Solutions");
         extractedFields.put("invoice_number", "INV-" + (System.currentTimeMillis() % 100000));
@@ -144,9 +143,7 @@ public class InvoicelyDocsService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // all
-            } else {
+            } else if (!"all".equalsIgnoreCase(status)) {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
             }

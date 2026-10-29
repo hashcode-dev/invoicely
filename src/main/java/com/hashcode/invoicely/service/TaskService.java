@@ -80,9 +80,7 @@ public class TaskService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // Return all
-            } else {
+            } else if (!"all".equalsIgnoreCase(status)) {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
             }
@@ -198,7 +196,6 @@ public class TaskService {
         } else if (stop) {
             stopTimer(entity);
         } else {
-            // Standard update
             if (dto.getDescription() != null) {
                 entity.setDescription(dto.getDescription());
             }
@@ -339,7 +336,6 @@ public class TaskService {
                 return Map.of("processed", tasks.size());
             }
             case "invoice_tasks", "invoice" -> {
-                // Filter un-invoiced tasks
                 List<TaskEntity> invoiceableTasks = tasks.stream()
                         .filter(t -> t.getInvoiceId() == null && !Boolean.TRUE.equals(t.getIsDeleted()))
                         .collect(Collectors.toList());
@@ -348,7 +344,6 @@ public class TaskService {
                     return Map.of("processed", 0, "message", "No uninvoiced tasks selected");
                 }
 
-                // Determine client
                 UUID clientId = invoiceableTasks.stream()
                         .map(TaskEntity::getClientId)
                         .filter(Objects::nonNull)
@@ -403,13 +398,11 @@ public class TaskService {
                 invoice.setBalance(totalInvoiceAmount);
                 InvoiceEntity savedInvoice = invoiceRepository.save(invoice);
 
-                // Link tasks to invoice
                 for (TaskEntity task : invoiceableTasks) {
                     task.setInvoiceId(savedInvoice.getId());
                 }
                 taskRepository.saveAll(invoiceableTasks);
 
-                // Update client balance
                 client.setBalance(client.getBalance().add(totalInvoiceAmount));
                 clientRepository.save(client);
 

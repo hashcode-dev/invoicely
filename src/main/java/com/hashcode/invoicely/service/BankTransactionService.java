@@ -74,13 +74,13 @@ public class BankTransactionService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // all
-            } else if (StringUtils.hasText(status) && !"active".equalsIgnoreCase(status)) {
-                predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
+            } else if (StringUtils.hasText(status) && !"all".equalsIgnoreCase(status)) {
+                if (!"active".equalsIgnoreCase(status)) {
+                    predicates.add(cb.equal(cb.lower(root.get("statusId")), status.toLowerCase()));
+                }
                 predicates.add(cb.isNull(root.get("archivedAt")));
                 predicates.add(cb.isFalse(root.get("isDeleted")));
-            } else {
+            } else if (!"all".equalsIgnoreCase(status)) {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
             }
@@ -151,7 +151,6 @@ public class BankTransactionService {
                 .isDeleted(false)
                 .build();
 
-        // Update bank account balance if associated
         if (dto.getBankIntegrationId() != null) {
             bankIntegrationRepository.findByCompanyIdAndId(companyId, dto.getBankIntegrationId()).ifPresent(bankAccount -> {
                 if ("credit".equalsIgnoreCase(baseType)) {
@@ -163,7 +162,6 @@ public class BankTransactionService {
             });
         }
 
-        // Apply matching rules
         applyRulesToTransaction(entity, companyId);
 
         BankTransactionEntity saved = bankTransactionRepository.save(entity);
@@ -340,7 +338,6 @@ public class BankTransactionService {
             if (optTx.isEmpty()) continue;
             BankTransactionEntity tx = optTx.get();
 
-            // 1. Match/convert to invoice(s)
             if (StringUtils.hasText(item.getInvoiceIds())) {
                 String[] idStrings = item.getInvoiceIds().split(",");
                 List<UUID> invoiceUuids = Arrays.stream(idStrings)
@@ -370,7 +367,6 @@ public class BankTransactionService {
                                 .isDeleted(false)
                                 .build();
 
-                        // Allocate across invoice(s)
                         BigDecimal remaining = tx.getAmount();
                         for (InvoiceEntity inv : invoices) {
                             if (remaining.compareTo(BigDecimal.ZERO) <= 0) break;
@@ -392,7 +388,6 @@ public class BankTransactionService {
                         invoiceRepository.saveAll(invoices);
                         PaymentEntity savedPay = paymentRepository.save(payment);
 
-                        // Update client balance
                         if (client != null) {
                             client.setPaidToDate(client.getPaidToDate().add(tx.getAmount()));
                             client.setBalance(client.getBalance().subtract(tx.getAmount()));

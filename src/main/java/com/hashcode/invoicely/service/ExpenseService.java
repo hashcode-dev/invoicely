@@ -309,7 +309,6 @@ public class ExpenseService {
                 }
             }
             case "convert_to_invoice" -> {
-                // Find or determine client
                 UUID determinedClientId = request.getClientId() != null
                         ? request.getClientId()
                         : entities.stream()
@@ -372,7 +371,6 @@ public class ExpenseService {
                 invoice.setBalance(invoice.getBalance().add(addedAmount));
                 InvoiceEntity savedInvoice = invoiceRepository.save(invoice);
 
-                // Update client balance
                 client.setBalance(client.getBalance().add(addedAmount));
                 clientRepository.save(client);
 

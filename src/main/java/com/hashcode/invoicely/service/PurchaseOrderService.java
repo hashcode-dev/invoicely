@@ -303,7 +303,6 @@ public class PurchaseOrderService {
                 case "delete" -> entity.setDeleted(true);
                 case "mark_sent" -> entity.setStatusId("sent");
                 case "expense" -> {
-                    // Convert PO to Expense
                     ExpenseEntity exp = ExpenseEntity.builder()
                             .companyId(companyId)
                             .userId(userId)
@@ -395,7 +394,6 @@ public class PurchaseOrderService {
             }
         }
 
-        // Apply PO-level discount
         BigDecimal totalAfterDisc;
         if (po.isAmountDiscount()) {
             totalAfterDisc = subtotal.subtract(po.getDiscount());

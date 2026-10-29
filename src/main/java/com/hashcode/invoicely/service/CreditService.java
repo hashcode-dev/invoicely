@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -58,9 +57,7 @@ public class CreditService {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
             } else if ("deleted".equalsIgnoreCase(status)) {
                 predicates.add(cb.isTrue(root.get("isDeleted")));
-            } else if ("all".equalsIgnoreCase(status)) {
-                // all
-            } else {
+            } else if (!"all".equalsIgnoreCase(status)) {
                 predicates.add(cb.isFalse(root.get("isDeleted")));
                 predicates.add(cb.isNull(root.get("archivedAt")));
             }
@@ -138,7 +135,6 @@ public class CreditService {
 
         CreditEntity saved = creditRepository.save(entity);
 
-        // Update client's credit balance
         client.setCreditBalance(client.getCreditBalance().add(amount));
         clientRepository.save(client);
 
@@ -166,7 +162,6 @@ public class CreditService {
 
         CreditEntity updated = creditRepository.save(entity);
 
-        // Adjust client credit balance
         BigDecimal diff = updated.getAmount().subtract(oldAmount);
         if (diff.compareTo(BigDecimal.ZERO) != 0) {
             clientRepository.findByCompanyIdAndId(companyId, updated.getClientId()).ifPresent(c -> {

@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.*;
