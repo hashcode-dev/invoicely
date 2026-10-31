@@ -26,6 +26,8 @@ public class AuthMapper {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .phone(user.getPhone())
+                .avatar(user.getAvatarUrl())
+                .authProvider(user.getAuthProvider() != null ? user.getAuthProvider().name() : null)
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().getEpochSecond() : null)
                 .build();

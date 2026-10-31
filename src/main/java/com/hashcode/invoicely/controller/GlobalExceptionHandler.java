@@ -40,4 +40,13 @@ public class GlobalExceptionHandler {
         body.put("message", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
+
+    @ExceptionHandler(com.hashcode.invoicely.exception.AccountProviderMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountProviderMismatch(com.hashcode.invoicely.exception.AccountProviderMismatchException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("message", ex.getMessage());
+        body.put("error_code", "AUTH_PROVIDER_MISMATCH");
+        body.put("required_provider", ex.getRequiredProvider());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }

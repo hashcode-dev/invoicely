@@ -15,5 +15,9 @@ public interface AuthService {
 
     ApiResponse<List<CompanyUserResponse>> login(LoginRequest request);
 
+    ApiResponse<List<CompanyUserResponse>> register(com.hashcode.invoicely.dto.auth.RegisterRequest request);
+
+    ApiResponse<List<CompanyUserResponse>> loginWithGoogle(com.hashcode.invoicely.dto.auth.GoogleLoginRequest request);
+
     ApiResponse<List<CompanyUserResponse>> refresh(UUID currentCompanyId);
 }

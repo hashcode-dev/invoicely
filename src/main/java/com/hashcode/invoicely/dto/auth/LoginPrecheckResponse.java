@@ -20,4 +20,7 @@ public class LoginPrecheckResponse {
     @JsonProperty("secret_required")
     @Builder.Default
     private boolean secretRequired = false;
+
+    @JsonProperty("auth_provider")
+    private String authProvider;
 }

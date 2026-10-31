@@ -41,6 +41,17 @@ public class UserEntity {
     @Builder.Default
     private boolean isRegistered = true;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider", length = 32, nullable = false)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.PASSWORD;
+
+    @Column(name = "oauth_id", length = 255)
+    private String oauthId;
+
+    @Column(name = "avatar_url", length = 1024)
+    private String avatarUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

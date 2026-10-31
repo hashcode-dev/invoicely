@@ -25,6 +25,9 @@ public class UserDto {
     private String phone;
     private String avatar;
 
+    @JsonProperty("auth_provider")
+    private String authProvider;
+
     @JsonProperty("created_at")
     private Long createdAt;
 

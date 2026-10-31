@@ -1,0 +1,30 @@
+package com.hashcode.invoicely.dto.auth;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class GoogleLoginRequest {
+
+    @JsonProperty("id_token")
+    private String idToken;
+
+    private String email;
+
+    @JsonProperty("first_name")
+    private String firstName;
+
+    @JsonProperty("last_name")
+    private String lastName;
+
+    @JsonProperty("avatar_url")
+    private String avatarUrl;
+
+    private String sub;
+}
