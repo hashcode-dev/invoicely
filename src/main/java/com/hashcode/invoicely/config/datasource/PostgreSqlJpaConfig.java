@@ -54,6 +54,7 @@ public class PostgreSqlJpaConfig {
 
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.open-in-view", false);
+        properties.put("hibernate.default_schema", "invoicely");
 
         return builder
                 .dataSource(dataSource)
