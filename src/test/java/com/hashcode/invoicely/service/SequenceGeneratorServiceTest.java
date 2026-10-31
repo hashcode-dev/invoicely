@@ -12,6 +12,8 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.hashcode.invoicely.service.impl.SequenceGeneratorServiceImpl;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,7 +26,7 @@ class SequenceGeneratorServiceTest {
     private MongoOperations mongoOperations;
 
     @InjectMocks
-    private SequenceGeneratorService sequenceGeneratorService;
+    private SequenceGeneratorServiceImpl sequenceGeneratorService;
 
     @Test
     @DisplayName("Should format sequence with 3 leading zeros when value <= 999")
