@@ -19,5 +19,7 @@ public interface AuthService {
 
     ApiResponse<List<CompanyUserResponse>> loginWithGoogle(com.hashcode.invoicely.dto.auth.GoogleLoginRequest request);
 
+    ApiResponse<List<CompanyUserResponse>> employeeLogin(com.hashcode.invoicely.dto.auth.EmployeeLoginRequest request);
+
     ApiResponse<List<CompanyUserResponse>> refresh(UUID currentCompanyId);
 }

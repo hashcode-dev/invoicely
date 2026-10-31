@@ -28,6 +28,12 @@ public class UserDto {
     @JsonProperty("auth_provider")
     private String authProvider;
 
+    @JsonProperty("organization_id")
+    private UUID organizationId;
+
+    @JsonProperty("company_user")
+    private CompanyUserDto companyUser;
+
     @JsonProperty("created_at")
     private Long createdAt;
 

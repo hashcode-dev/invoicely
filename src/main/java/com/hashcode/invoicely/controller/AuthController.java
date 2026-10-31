@@ -44,6 +44,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.loginWithGoogle(request));
     }
 
+    @PostMapping(path = {"/auth/employee_login", "/login/employee"})
+    public ResponseEntity<ApiResponse<List<CompanyUserResponse>>> employeeLogin(
+            @Valid @RequestBody com.hashcode.invoicely.dto.auth.EmployeeLoginRequest request) {
+        return ResponseEntity.ok(authService.employeeLogin(request));
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<List<CompanyUserResponse>>> refresh(
             @RequestParam(value = "current_company", required = false) UUID currentCompanyId) {

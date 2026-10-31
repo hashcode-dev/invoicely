@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateCompanyRequest {
 
-    @NotBlank(message = "Company name is required")
     @JsonProperty("company_name")
     private String companyName;
 

@@ -7,6 +7,7 @@ import com.hashcode.invoicely.context.TenantContext;
 import com.hashcode.invoicely.dto.auth.AccountDto;
 import com.hashcode.invoicely.dto.auth.CompanyDto;
 import com.hashcode.invoicely.dto.auth.CompanyUserResponse;
+import com.hashcode.invoicely.dto.auth.EmployeeLoginRequest;
 import com.hashcode.invoicely.dto.auth.GoogleLoginRequest;
 import com.hashcode.invoicely.dto.auth.LoginPrecheckRequest;
 import com.hashcode.invoicely.dto.auth.LoginPrecheckResponse;
@@ -276,6 +277,52 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
+    public ApiResponse<List<CompanyUserResponse>> employeeLogin(EmployeeLoginRequest request) {
+        if (request == null || request.getOrganizationId() == null || request.getEmployeeId() == null || request.getPassword() == null) {
+            throw new BadCredentialsException("Organization ID, Employee ID, and Password are required");
+        }
+
+        UUID organizationId;
+        try {
+            organizationId = UUID.fromString(request.getOrganizationId().trim());
+        } catch (IllegalArgumentException e) {
+            throw new BadCredentialsException("Invalid Organization ID format");
+        }
+
+        AccountEntity account = accountRepository.findById(organizationId)
+                .orElseThrow(() -> new BadCredentialsException("Organization not found"));
+
+        String employeeIdentifier = request.getEmployeeId().trim();
+        Optional<UserEntity> userOpt;
+        try {
+            UUID employeeUuid = UUID.fromString(employeeIdentifier);
+            userOpt = userRepository.findById(employeeUuid);
+        } catch (IllegalArgumentException e) {
+            userOpt = userRepository.findByEmailIgnoreCase(employeeIdentifier);
+        }
+
+        UserEntity employee = userOpt
+                .orElseThrow(() -> new BadCredentialsException("Invalid employee ID or password"));
+
+        if (employee.getPasswordHash() == null || !passwordEncoder.matches(request.getPassword(), employee.getPasswordHash())) {
+            throw new BadCredentialsException("Invalid employee ID or password");
+        }
+
+        List<CompanyUserEntity> allLinks = companyUserRepository.findByUserId(employee.getId());
+        List<CompanyUserEntity> organizationLinks = allLinks.stream()
+                .filter(link -> link.getAccountId().equals(account.getId()))
+                .toList();
+
+        if (organizationLinks.isEmpty()) {
+            throw new BadCredentialsException("Employee is not assigned to any active company workspace within this organization");
+        }
+
+        List<CompanyUserResponse> responses = buildCompanyUserResponses(employee, organizationLinks);
+        return ApiResponse.of(responses);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ApiResponse<List<CompanyUserResponse>> refresh(UUID currentCompanyId) {
         UUID userId = TenantContext.getUserId();
         if (userId == null) {
@@ -299,6 +346,11 @@ public class AuthServiceImpl implements AuthService {
                 .plan("enterprise")
                 .build();
         account = accountRepository.save(account);
+
+        if (user.getOrganizationId() == null) {
+            user.setOrganizationId(account.getId());
+            userRepository.save(user);
+        }
 
         String companyName;
         if (customCompanyName != null && !customCompanyName.isBlank()) {

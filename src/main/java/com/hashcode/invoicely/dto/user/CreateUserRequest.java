@@ -34,4 +34,25 @@ public class CreateUserRequest {
 
     @Builder.Default
     private Long permissions = 0L;
+
+    @JsonProperty("company_user")
+    private com.hashcode.invoicely.dto.auth.CompanyUserDto companyUser;
+
+    public boolean resolveIsAdmin() {
+        if (companyUser != null) {
+            return companyUser.isAdmin();
+        }
+        return isAdmin;
+    }
+
+    public long resolvePermissions() {
+        if (companyUser != null && companyUser.getPermissions() != null) {
+            try {
+                return Long.parseLong(companyUser.getPermissions());
+            } catch (NumberFormatException e) {
+                return -1L;
+            }
+        }
+        return permissions != null ? permissions : 0L;
+    }
 }

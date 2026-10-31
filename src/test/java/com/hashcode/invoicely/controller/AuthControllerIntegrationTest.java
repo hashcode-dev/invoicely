@@ -372,4 +372,57 @@ class AuthControllerIntegrationTest {
                 .andExpect(jsonPath("$.methods", hasItem("password")))
                 .andExpect(jsonPath("$.methods", hasItem("google")));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/employee_login should authenticate employee with Organization ID, Employee ID, and Password")
+    void shouldAuthenticateEmployeeSuccessfully() throws Exception {
+        com.hashcode.invoicely.dto.auth.EmployeeLoginRequest request = com.hashcode.invoicely.dto.auth.EmployeeLoginRequest.builder()
+                .organizationId(testAccount.getId().toString())
+                .employeeId("test.manager@invoicely.com")
+                .password("SecretPass123!")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/employee_login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data", hasSize(1)))
+                .andExpect(jsonPath("$.data[0].user.email", is("test.manager@invoicely.com")))
+                .andExpect(jsonPath("$.data[0].account.id", is(testAccount.getId().toString())))
+                .andExpect(jsonPath("$.data[0].token.token").isString());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/employee_login should reject when organization ID is invalid")
+    void shouldRejectEmployeeLoginWithInvalidOrganization() throws Exception {
+        com.hashcode.invoicely.dto.auth.EmployeeLoginRequest request = com.hashcode.invoicely.dto.auth.EmployeeLoginRequest.builder()
+                .organizationId(java.util.UUID.randomUUID().toString())
+                .employeeId("test.manager@invoicely.com")
+                .password("SecretPass123!")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/employee_login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message", is("Organization not found")));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/employee_login should reject when employee does not belong to organization")
+    void shouldRejectEmployeeLoginWhenNotMemberOfOrg() throws Exception {
+        AccountEntity otherAccount = accountRepository.save(AccountEntity.builder().plan("free").build());
+
+        com.hashcode.invoicely.dto.auth.EmployeeLoginRequest request = com.hashcode.invoicely.dto.auth.EmployeeLoginRequest.builder()
+                .organizationId(otherAccount.getId().toString())
+                .employeeId("test.manager@invoicely.com")
+                .password("SecretPass123!")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/employee_login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message", containsString("not assigned to any active company")));
+    }
 }

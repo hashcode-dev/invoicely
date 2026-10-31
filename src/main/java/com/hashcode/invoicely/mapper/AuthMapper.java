@@ -28,6 +28,7 @@ public class AuthMapper {
                 .phone(user.getPhone())
                 .avatar(user.getAvatarUrl())
                 .authProvider(user.getAuthProvider() != null ? user.getAuthProvider().name() : null)
+                .organizationId(user.getOrganizationId())
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().getEpochSecond() : null)
                 .build();
@@ -48,6 +49,7 @@ public class AuthMapper {
                 .vatNumber(company.getVatNumber())
                 .gstNumber(company.getGstNumber())
                 .portalDomain(company.getPortalDomain())
+                .settings(java.util.Map.of("name", company.getCompanyName() != null ? company.getCompanyName() : ""))
                 .createdAt(company.getCreatedAt() != null ? company.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(company.getUpdatedAt() != null ? company.getUpdatedAt().getEpochSecond() : null)
                 .build();

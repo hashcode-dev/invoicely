@@ -49,17 +49,20 @@ public class CompanyServiceImpl implements CompanyService {
         UUID accountId = TenantContext.getAccountId();
         UUID userId = TenantContext.getUserId();
 
-        String subdomain = request.getSubdomain();
-        if (subdomain == null || subdomain.isBlank()) {
-            subdomain = "comp-" + UUID.randomUUID().toString().substring(0, 8);
-        }
+        String companyName = (request != null && request.getCompanyName() != null && !request.getCompanyName().isBlank())
+                ? request.getCompanyName().trim()
+                : "New Company";
+
+        String subdomain = (request != null && request.getSubdomain() != null && !request.getSubdomain().isBlank())
+                ? request.getSubdomain()
+                : "comp-" + UUID.randomUUID().toString().substring(0, 8);
 
         CompanyEntity company = CompanyEntity.builder()
                 .accountId(accountId)
-                .companyName(request.getCompanyName())
+                .companyName(companyName)
                 .subdomain(subdomain)
-                .currencyId(request.getCurrencyId() != null ? request.getCurrencyId() : "USD")
-                .countryId(request.getCountryId() != null ? request.getCountryId() : "US")
+                .currencyId(request != null && request.getCurrencyId() != null ? request.getCurrencyId() : "USD")
+                .countryId(request != null && request.getCountryId() != null ? request.getCountryId() : "US")
                 .sizeId(request.getSizeId())
                 .industryId(request.getIndustryId())
                 .vatNumber(request.getVatNumber())

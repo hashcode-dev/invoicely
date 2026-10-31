@@ -22,6 +22,7 @@ public class CompanyMapper {
                 .vatNumber(entity.getVatNumber())
                 .gstNumber(entity.getGstNumber())
                 .portalDomain(entity.getPortalDomain())
+                .settings(java.util.Map.of("name", entity.getCompanyName() != null ? entity.getCompanyName() : ""))
                 .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().getEpochSecond() : null)
                 .build();
