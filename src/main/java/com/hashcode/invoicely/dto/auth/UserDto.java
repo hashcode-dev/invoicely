@@ -31,6 +31,11 @@ public class UserDto {
     @JsonProperty("organization_id")
     private UUID organizationId;
 
+    @JsonProperty("is_employee")
+    private Boolean isEmployee;
+
+    private String role;
+
     @JsonProperty("company_user")
     private CompanyUserDto companyUser;
 

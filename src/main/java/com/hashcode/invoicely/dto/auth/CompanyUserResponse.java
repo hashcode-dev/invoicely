@@ -34,6 +34,12 @@ public class CompanyUserResponse {
     @Builder.Default
     private boolean isLocked = false;
 
+    @JsonProperty("is_employee")
+    @Builder.Default
+    private boolean isEmployee = false;
+
+    private String role;
+
     @Builder.Default
     private Map<String, Object> notifications = Map.of("email", Collections.emptyList());
 

@@ -34,6 +34,9 @@ public class UserMapper {
                     .build();
         }
 
+        boolean isEmployee = link != null && !link.isOwner() && !link.isAdmin();
+        String role = link != null ? (link.isOwner() ? "owner" : (link.isAdmin() ? "admin" : "employee")) : "employee";
+
         return UserDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
@@ -43,6 +46,8 @@ public class UserMapper {
                 .avatar(user.getAvatarUrl())
                 .authProvider(user.getAuthProvider() != null ? user.getAuthProvider().name() : null)
                 .organizationId(user.getOrganizationId() != null ? user.getOrganizationId() : (link != null ? link.getAccountId() : null))
+                .isEmployee(isEmployee)
+                .role(role)
                 .companyUser(companyUserDto)
                 .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(user.getUpdatedAt() != null ? user.getUpdatedAt().getEpochSecond() : null)

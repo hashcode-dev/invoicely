@@ -86,6 +86,13 @@ public class AuthMapper {
             TokenDto tokenDto,
             CompanyUserEntity link
     ) {
+        boolean isEmployee = !link.isOwner() && !link.isAdmin();
+        String role = link.isOwner() ? "owner" : (link.isAdmin() ? "admin" : "employee");
+        if (userDto != null && userDto.getIsEmployee() == null) {
+            userDto.setIsEmployee(isEmployee);
+            userDto.setRole(role);
+        }
+
         return CompanyUserResponse.builder()
                 .user(userDto)
                 .company(companyDto)
@@ -94,6 +101,8 @@ public class AuthMapper {
                 .isOwner(link.isOwner())
                 .isAdmin(link.isAdmin())
                 .isLocked(link.isLocked())
+                .isEmployee(isEmployee)
+                .role(role)
                 .permissions(String.valueOf(link.getPermissions()))
                 .createdAt(link.getCreatedAt() != null ? link.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(link.getUpdatedAt() != null ? link.getUpdatedAt().getEpochSecond() : null)

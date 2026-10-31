@@ -92,6 +92,15 @@ public class UserServiceImpl implements UserService {
             }
 
             // Guardrail 1: Reuse existing UserEntity, create distinct CompanyUserEntity for this company
+            if (user.getOrganizationId() == null && accountId != null) {
+                user.setOrganizationId(accountId);
+                user = userRepository.save(user);
+            }
+            if (request.getPassword() != null && !request.getPassword().isBlank()) {
+                user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+                user = userRepository.save(user);
+            }
+
             link = CompanyUserEntity.builder()
                     .companyId(companyId)
                     .userId(user.getId())

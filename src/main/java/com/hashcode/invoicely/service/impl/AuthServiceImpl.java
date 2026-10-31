@@ -318,6 +318,14 @@ public class AuthServiceImpl implements AuthService {
         }
 
         List<CompanyUserResponse> responses = buildCompanyUserResponses(employee, organizationLinks);
+        responses.forEach(r -> {
+            r.setEmployee(true);
+            r.setRole("employee");
+            if (r.getUser() != null) {
+                r.getUser().setIsEmployee(true);
+                r.getUser().setRole("employee");
+            }
+        });
         return ApiResponse.of(responses);
     }
 
