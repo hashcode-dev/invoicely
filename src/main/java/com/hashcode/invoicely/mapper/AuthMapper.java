@@ -9,12 +9,22 @@ import com.hashcode.invoicely.entity.relational.AccountEntity;
 import com.hashcode.invoicely.entity.relational.CompanyEntity;
 import com.hashcode.invoicely.entity.relational.CompanyUserEntity;
 import com.hashcode.invoicely.entity.relational.UserEntity;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class AuthMapper {
+
+    private final ObjectMapper objectMapper;
 
     public UserDto toUserDto(UserEntity user) {
         if (user == null) {
@@ -93,6 +103,15 @@ public class AuthMapper {
             userDto.setRole(role);
         }
 
+        Map<String, Object> reactSettings = Collections.emptyMap();
+        if (link.getPreferences() != null && !link.getPreferences().isBlank()) {
+            try {
+                reactSettings = objectMapper.readValue(link.getPreferences(), new TypeReference<Map<String, Object>>() {});
+            } catch (Exception e) {
+                log.warn("Failed to parse company user preferences: {}", e.getMessage());
+            }
+        }
+
         return CompanyUserResponse.builder()
                 .user(userDto)
                 .company(companyDto)
@@ -103,6 +122,7 @@ public class AuthMapper {
                 .isLocked(link.isLocked())
                 .isEmployee(isEmployee)
                 .role(role)
+                .reactSettings(reactSettings)
                 .permissions(String.valueOf(link.getPermissions()))
                 .createdAt(link.getCreatedAt() != null ? link.getCreatedAt().getEpochSecond() : null)
                 .updatedAt(link.getUpdatedAt() != null ? link.getUpdatedAt().getEpochSecond() : null)

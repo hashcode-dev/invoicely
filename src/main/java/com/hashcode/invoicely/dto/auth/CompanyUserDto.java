@@ -48,6 +48,10 @@ public class CompanyUserDto {
     @Builder.Default
     private Map<String, Object> settings = Collections.emptyMap();
 
+    @JsonProperty("react_settings")
+    @Builder.Default
+    private Map<String, Object> reactSettings = Collections.emptyMap();
+
     @JsonProperty("created_at")
     private Long createdAt;
 

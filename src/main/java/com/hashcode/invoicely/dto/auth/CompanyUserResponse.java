@@ -46,6 +46,10 @@ public class CompanyUserResponse {
     @Builder.Default
     private Map<String, Object> settings = Map.of("accent_color", "#004bca");
 
+    @JsonProperty("react_settings")
+    @Builder.Default
+    private Map<String, Object> reactSettings = Collections.emptyMap();
+
     @JsonProperty("created_at")
     private Long createdAt;
 

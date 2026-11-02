@@ -42,6 +42,7 @@ public class SecurityConfig {
                                 "/api/v1/login/**",
                                 "/api/v1/login/precheck",
                                 "/api/v1/register",
+                                "/api/v1/signup",
                                 "/api/v1/auth/google",
                                 "/api/v1/auth/employee_login",
                                 "/api/v1/oauth_login",

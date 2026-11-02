@@ -32,7 +32,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
-    @PostMapping("/register")
+    @PostMapping(path = {"/register", "/signup"})
     public ResponseEntity<ApiResponse<List<CompanyUserResponse>>> register(
             @Valid @RequestBody com.hashcode.invoicely.dto.auth.RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));

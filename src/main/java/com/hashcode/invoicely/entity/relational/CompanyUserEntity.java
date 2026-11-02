@@ -52,6 +52,10 @@ public class CompanyUserEntity {
     @Builder.Default
     private long permissions = 0L;
 
+    @Column(name = "preferences", columnDefinition = "TEXT")
+    @Builder.Default
+    private String preferences = "{}";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
