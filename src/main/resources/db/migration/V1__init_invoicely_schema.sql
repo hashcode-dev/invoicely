@@ -1,17 +1,17 @@
 -- ==============================================================================
 -- Invoicely Platform - Complete Enterprise Baseline DDL (PostgreSQL)
 -- ==============================================================================
--- Schema Version: 1.0.0 (Unified Baseline)
+-- Schema Version: 1.0.0 (Unified Complete Baseline)
 -- Target Database: PostgreSQL 14+ (Compatible with Supabase / Aurora PostgreSQL / H2)
 -- Architecture: Multi-Tenant B2B Invoicing, Payments, Procurement & Financial Engine
 --
 -- EXECUTION INSTRUCTIONS FOR DBA:
 -- 1. Ensure target database and user exist with appropriate privileges.
 -- 2. Execute this script using psql or your migration pipeline:
---      psql -h <host> -U <user> -d <database> -f init_invoicely_schema.sql
+--      psql -h <host> -U <user> -d <database> -f V1__init_invoicely_schema.sql
 -- 3. The script is structured in strictly ordered dependency tiers (Tiers 0 - 8):
 --      - Tier 0: Schema & Core Extension Setup
---      - Tier 1: Multi-Tenancy & IAM Foundation (Accounts, Companies, Users, Auth)
+--      - Tier 1: Multi-Tenancy & IAM Foundation (Accounts, Companies, Users, Auth, Sequences)
 --      - Tier 2: CRM Master Data (Clients, Vendors, and Contacts)
 --      - Tier 3: Master Catalogs, Task Workflows & Project Management
 --      - Tier 4: Core Invoicing, Line Items, Quotes, Credits & Subscriptions
@@ -115,11 +115,18 @@ CREATE TABLE IF NOT EXISTS invoicely.api_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_api_tokens_token_hash ON invoicely.api_tokens(token_hash);
 
+-- 6. System Sequences (Atomic Relational Number Sequences for Invoices, Payments, POs, etc.)
+CREATE TABLE IF NOT EXISTS invoicely.system_sequences (
+    id VARCHAR(128) PRIMARY KEY,
+    seq BIGINT NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
 -- ==============================================================================
 -- TIER 2: CRM MASTER DATA (CLIENTS & VENDORS)
 -- ==============================================================================
 
--- 6. Clients (Accounts Receivable customers)
+-- 7. Clients (Accounts Receivable customers)
 CREATE TABLE IF NOT EXISTS invoicely.clients (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -165,7 +172,7 @@ CREATE TABLE IF NOT EXISTS invoicely.clients (
 CREATE INDEX IF NOT EXISTS idx_clients_company_id ON invoicely.clients(company_id);
 CREATE INDEX IF NOT EXISTS idx_clients_company_status ON invoicely.clients(company_id, is_deleted);
 
--- 7. Client Contacts (Authorized contact persons for a client)
+-- 8. Client Contacts (Authorized contact persons for a client)
 CREATE TABLE IF NOT EXISTS invoicely.client_contacts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     client_id UUID NOT NULL REFERENCES invoicely.clients(id) ON DELETE CASCADE,
@@ -189,7 +196,7 @@ CREATE TABLE IF NOT EXISTS invoicely.client_contacts (
 
 CREATE INDEX IF NOT EXISTS idx_client_contacts_client_id ON invoicely.client_contacts(client_id);
 
--- 8. Vendors (Accounts Payable suppliers)
+-- 9. Vendors (Accounts Payable suppliers)
 CREATE TABLE IF NOT EXISTS invoicely.vendors (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -226,7 +233,7 @@ CREATE TABLE IF NOT EXISTS invoicely.vendors (
 CREATE INDEX IF NOT EXISTS idx_vendors_company_id ON invoicely.vendors(company_id);
 CREATE INDEX IF NOT EXISTS idx_vendors_company_status ON invoicely.vendors(company_id, is_deleted);
 
--- 9. Vendor Contacts (Authorized contact persons for a vendor)
+-- 10. Vendor Contacts (Authorized contact persons for a vendor)
 CREATE TABLE IF NOT EXISTS invoicely.vendor_contacts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     vendor_id UUID NOT NULL REFERENCES invoicely.vendors(id) ON DELETE CASCADE,
@@ -252,7 +259,7 @@ CREATE INDEX IF NOT EXISTS idx_vendor_contacts_vendor_id ON invoicely.vendor_con
 -- TIER 3: CATALOGS, WORKFLOW STATUSES & PROJECT MANAGEMENT
 -- ==============================================================================
 
--- 10. Expense Categories (Tax & budget categorization for expenses)
+-- 11. Expense Categories (Tax & budget categorization for expenses)
 CREATE TABLE IF NOT EXISTS invoicely.expense_categories (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -268,7 +275,7 @@ CREATE TABLE IF NOT EXISTS invoicely.expense_categories (
 
 CREATE INDEX IF NOT EXISTS idx_expense_categories_company_id ON invoicely.expense_categories(company_id);
 
--- 11. Products (Product catalog, pricing, SKU and inventory)
+-- 12. Products (Product catalog, pricing, SKU and inventory)
 CREATE TABLE IF NOT EXISTS invoicely.products (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -301,7 +308,7 @@ CREATE TABLE IF NOT EXISTS invoicely.products (
 
 CREATE INDEX IF NOT EXISTS idx_products_company_id ON invoicely.products(company_id);
 
--- 12. Task Statuses (Kanban columns & workflow state machines)
+-- 13. Task Statuses (Kanban columns & workflow state machines)
 CREATE TABLE IF NOT EXISTS invoicely.task_statuses (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -318,7 +325,7 @@ CREATE TABLE IF NOT EXISTS invoicely.task_statuses (
 
 CREATE INDEX IF NOT EXISTS idx_task_statuses_company ON invoicely.task_statuses(company_id, is_deleted);
 
--- 13. Projects (Client-linked billable projects & budgets)
+-- 14. Projects (Client-linked billable projects & budgets)
 CREATE TABLE IF NOT EXISTS invoicely.projects (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -351,7 +358,7 @@ CREATE INDEX IF NOT EXISTS idx_projects_client ON invoicely.projects(company_id,
 -- TIER 4: CORE INVOICING, BILLING ENGINE & TIME TRACKING
 -- ==============================================================================
 
--- 14. Tax Rates (Configurable sales tax, VAT, GST rates)
+-- 15. Tax Rates (Configurable sales tax, VAT, GST rates)
 CREATE TABLE IF NOT EXISTS invoicely.tax_rates (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -367,7 +374,7 @@ CREATE TABLE IF NOT EXISTS invoicely.tax_rates (
 
 CREATE INDEX IF NOT EXISTS idx_tax_rates_company_id ON invoicely.tax_rates(company_id);
 
--- 15. Invoices (Core sales invoices and billing records)
+-- 16. Invoices (Core sales invoices and billing records)
 CREATE TABLE IF NOT EXISTS invoicely.invoices (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -416,8 +423,10 @@ CREATE TABLE IF NOT EXISTS invoicely.invoices (
 CREATE INDEX IF NOT EXISTS idx_invoices_company_id ON invoicely.invoices(company_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoicely.invoices(client_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoicely.invoices(company_id, status_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_invoices_tenant_status_date ON invoicely.invoices(company_id, is_deleted, status_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_invoices_tenant_client ON invoicely.invoices(company_id, client_id, due_date);
 
--- 16. Invoice Items (Granular line items per invoice)
+-- 17. Invoice Items (Granular line items per invoice)
 CREATE TABLE IF NOT EXISTS invoicely.invoice_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     invoice_id UUID NOT NULL REFERENCES invoicely.invoices(id) ON DELETE CASCADE,
@@ -445,7 +454,7 @@ CREATE TABLE IF NOT EXISTS invoicely.invoice_items (
 
 CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoicely.invoice_items(invoice_id);
 
--- 17. Quotes (Estimates and commercial proposals)
+-- 18. Quotes (Estimates and commercial proposals)
 CREATE TABLE IF NOT EXISTS invoicely.quotes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -484,7 +493,7 @@ CREATE TABLE IF NOT EXISTS invoicely.quotes (
 CREATE INDEX IF NOT EXISTS idx_quotes_company_id ON invoicely.quotes(company_id);
 CREATE INDEX IF NOT EXISTS idx_quotes_client_id ON invoicely.quotes(client_id);
 
--- 18. Quote Items (Granular line items per quote)
+-- 19. Quote Items (Granular line items per quote)
 CREATE TABLE IF NOT EXISTS invoicely.quote_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     quote_id UUID NOT NULL REFERENCES invoicely.quotes(id) ON DELETE CASCADE,
@@ -500,7 +509,7 @@ CREATE TABLE IF NOT EXISTS invoicely.quote_items (
     sort_id INT DEFAULT 0
 );
 
--- 19. Credit Notes (Client credit balances and adjustment notes)
+-- 20. Credit Notes (Client credit balances and adjustment notes)
 CREATE TABLE IF NOT EXISTS invoicely.credits (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -526,7 +535,7 @@ CREATE TABLE IF NOT EXISTS invoicely.credits (
 CREATE INDEX IF NOT EXISTS idx_credits_company_id ON invoicely.credits(company_id);
 CREATE INDEX IF NOT EXISTS idx_credits_client_id ON invoicely.credits(client_id);
 
--- 20. Recurring Invoices (Subscription & schedule-driven billing automation)
+-- 21. Recurring Invoices (Subscription & schedule-driven billing automation)
 CREATE TABLE IF NOT EXISTS invoicely.recurring_invoices (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -548,7 +557,7 @@ CREATE TABLE IF NOT EXISTS invoicely.recurring_invoices (
 
 CREATE INDEX IF NOT EXISTS idx_recurring_invoices_company_id ON invoicely.recurring_invoices(company_id);
 
--- 21. Tasks & Time-Tracking Logs (Billable project tasks and duration records)
+-- 22. Tasks & Time-Tracking Logs (Billable project tasks and duration records)
 CREATE TABLE IF NOT EXISTS invoicely.tasks (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -589,7 +598,7 @@ CREATE INDEX IF NOT EXISTS idx_tasks_invoice ON invoicely.tasks(company_id, invo
 -- TIER 5: PAYMENT GATEWAYS & LEDGER RECONCILIATION
 -- ==============================================================================
 
--- 22. Company Payment Gateways (Stripe, PayPal, Authorize.Net integration credentials)
+-- 23. Company Payment Gateways (Stripe, PayPal, Authorize.Net integration credentials)
 CREATE TABLE IF NOT EXISTS invoicely.company_gateways (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -604,7 +613,7 @@ CREATE TABLE IF NOT EXISTS invoicely.company_gateways (
 
 CREATE INDEX IF NOT EXISTS idx_company_gateways_company_id ON invoicely.company_gateways(company_id);
 
--- 23. Payments (Accounts Receivable received payments and refunds)
+-- 24. Payments (Accounts Receivable received payments and refunds)
 CREATE TABLE IF NOT EXISTS invoicely.payments (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -635,8 +644,9 @@ CREATE TABLE IF NOT EXISTS invoicely.payments (
 
 CREATE INDEX IF NOT EXISTS idx_payments_company_id ON invoicely.payments(company_id);
 CREATE INDEX IF NOT EXISTS idx_payments_client_id ON invoicely.payments(client_id);
+CREATE INDEX IF NOT EXISTS idx_payments_tenant_date ON invoicely.payments(company_id, is_deleted, date DESC);
 
--- 24. Paymentables (Many-to-Many payment-to-invoice allocation ledger)
+-- 25. Paymentables (Many-to-Many payment-to-invoice allocation ledger)
 CREATE TABLE IF NOT EXISTS invoicely.paymentables (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     payment_id UUID NOT NULL REFERENCES invoicely.payments(id) ON DELETE CASCADE,
@@ -654,7 +664,7 @@ CREATE INDEX IF NOT EXISTS idx_paymentables_invoice_id ON invoicely.paymentables
 -- TIER 6: PROCUREMENT & ACCOUNTS PAYABLE (PURCHASE ORDERS & EXPENSES)
 -- ==============================================================================
 
--- 25. Purchase Orders (Procurement orders issued to vendors)
+-- 26. Purchase Orders (Procurement orders issued to vendors)
 CREATE TABLE IF NOT EXISTS invoicely.purchase_orders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -702,7 +712,7 @@ CREATE INDEX IF NOT EXISTS idx_purchase_orders_company_id ON invoicely.purchase_
 CREATE INDEX IF NOT EXISTS idx_purchase_orders_vendor_id ON invoicely.purchase_orders(vendor_id);
 CREATE INDEX IF NOT EXISTS idx_purchase_orders_client_id ON invoicely.purchase_orders(client_id);
 
--- 26. Purchase Order Items (Granular line items per purchase order)
+-- 27. Purchase Order Items (Granular line items per purchase order)
 CREATE TABLE IF NOT EXISTS invoicely.purchase_order_items (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     purchase_order_id UUID NOT NULL REFERENCES invoicely.purchase_orders(id) ON DELETE CASCADE,
@@ -726,7 +736,7 @@ CREATE TABLE IF NOT EXISTS invoicely.purchase_order_items (
 
 CREATE INDEX IF NOT EXISTS idx_purchase_order_items_po_id ON invoicely.purchase_order_items(purchase_order_id);
 
--- 27. Expenses (Operating expenses, vendor bills & disbursements)
+-- 28. Expenses (Operating expenses, vendor bills & disbursements)
 CREATE TABLE IF NOT EXISTS invoicely.expenses (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -778,12 +788,13 @@ CREATE INDEX IF NOT EXISTS idx_expenses_client_id ON invoicely.expenses(client_i
 CREATE INDEX IF NOT EXISTS idx_expenses_invoice_id ON invoicely.expenses(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_category_id ON invoicely.expenses(category_id);
 CREATE INDEX IF NOT EXISTS idx_expenses_po_id ON invoicely.expenses(purchase_order_id);
+CREATE INDEX IF NOT EXISTS idx_expenses_tenant_date ON invoicely.expenses(company_id, is_deleted, date DESC);
 
 -- ==============================================================================
 -- TIER 7: BANKING INTEGRATIONS, RULES & TRANSACTION FEEDS
 -- ==============================================================================
 
--- 28. Bank Integrations (Open Banking / Plaid / Nordigen financial accounts)
+-- 29. Bank Integrations (Open Banking / Plaid / Nordigen financial accounts)
 CREATE TABLE IF NOT EXISTS invoicely.bank_integrations (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -810,7 +821,7 @@ CREATE TABLE IF NOT EXISTS invoicely.bank_integrations (
 
 CREATE INDEX IF NOT EXISTS idx_bank_integrations_company ON invoicely.bank_integrations(company_id, is_deleted);
 
--- 29. Bank Transaction Rules (Automated categorization and reconciliation match engine)
+-- 30. Bank Transaction Rules (Automated categorization and reconciliation match engine)
 CREATE TABLE IF NOT EXISTS invoicely.bank_transaction_rules (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -832,7 +843,7 @@ CREATE TABLE IF NOT EXISTS invoicely.bank_transaction_rules (
 
 CREATE INDEX IF NOT EXISTS idx_bank_transaction_rules_company ON invoicely.bank_transaction_rules(company_id, is_deleted);
 
--- 30. Bank Transactions (Bank statement line item feeds)
+-- 31. Bank Transactions (Bank statement line item feeds)
 CREATE TABLE IF NOT EXISTS invoicely.bank_transactions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -870,7 +881,7 @@ CREATE INDEX IF NOT EXISTS idx_bank_transactions_expense ON invoicely.bank_trans
 -- TIER 8: DOCUMENT VAULT, DESIGNS & E-SIGNATURE BLUEPRINTS
 -- ==============================================================================
 
--- 31. Designs (Invoice & Quote HTML/CSS template AST designs)
+-- 32. Designs (Invoice & Quote HTML/CSS template AST designs)
 CREATE TABLE IF NOT EXISTS invoicely.designs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID,
@@ -891,7 +902,7 @@ CREATE TABLE IF NOT EXISTS invoicely.designs (
 CREATE INDEX IF NOT EXISTS idx_designs_company_status ON invoicely.designs(company_id, is_deleted, archived_at);
 CREATE INDEX IF NOT EXISTS idx_designs_is_template ON invoicely.designs(is_template, entities);
 
--- 32. Documents (Document management, receipts, attachments and metadata)
+-- 33. Documents (Document management, receipts, attachments and metadata)
 CREATE TABLE IF NOT EXISTS invoicely.documents (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -925,7 +936,7 @@ CREATE INDEX IF NOT EXISTS idx_documents_client ON invoicely.documents(client_id
 CREATE INDEX IF NOT EXISTS idx_documents_invoice ON invoicely.documents(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_documents_expense ON invoicely.documents(expense_id);
 
--- 33. Blueprints (Invoicely Docs contracts and e-signing workflows)
+-- 34. Blueprints (Invoicely Docs contracts and e-signing workflows)
 CREATE TABLE IF NOT EXISTS invoicely.blueprints (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     company_id UUID NOT NULL REFERENCES invoicely.companies(id) ON DELETE CASCADE,
@@ -945,6 +956,6 @@ CREATE INDEX IF NOT EXISTS idx_blueprints_company_status ON invoicely.blueprints
 
 -- ==============================================================================
 -- END OF INVOICELY UNIFIED BASELINE DDL
--- Total Tables Defined: 33
--- Total Indexes Defined: 47
+-- Total Tables Defined: 34
+-- Total Indexes Defined: 51
 -- ==============================================================================
