@@ -3,11 +3,13 @@ package com.hashcode.invoicely.config.security;
 import com.hashcode.invoicely.context.TenantContext;
 import com.hashcode.invoicely.entity.relational.ApiTokenEntity;
 import com.hashcode.invoicely.repository.relational.ApiTokenRepository;
+import com.hashcode.invoicely.repository.relational.CompanyUserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +23,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -32,6 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final ApiTokenRepository apiTokenRepository;
+    private final CompanyUserRepository companyUserRepository;
 
     @Override
     protected void doFilterInternal(
@@ -49,11 +53,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UUID companyId = jwtTokenProvider.getCompanyId(token);
                     UUID accountId = jwtTokenProvider.getAccountId(token);
 
-                    // Allow override of active company if X-Company-ID header is explicitly supplied
+                    // Allow override of active company only if verified member of that company
                     String companyHeader = request.getHeader(HEADER_COMPANY_ID);
                     if (StringUtils.hasText(companyHeader)) {
                         try {
-                            companyId = UUID.fromString(companyHeader);
+                            UUID requestedCompanyId = UUID.fromString(companyHeader);
+                            if (requestedCompanyId.equals(companyId) ||
+                                    (userId != null && companyUserRepository.findByCompanyIdAndUserId(requestedCompanyId, userId).isPresent())) {
+                                companyId = requestedCompanyId;
+                            } else {
+                                log.warn("User {} attempted unauthorized access to company {}", userId, requestedCompanyId);
+                                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Unauthorized company access");
+                                return;
+                            }
                         } catch (IllegalArgumentException ignored) {
                         }
                     }

@@ -43,4 +43,20 @@ class JwtTokenProviderTest {
         assertThat(jwtTokenProvider.validateToken("")).isFalse();
         assertThat(jwtTokenProvider.validateToken(null)).isFalse();
     }
+
+    @Test
+    @DisplayName("Should throw IllegalStateException in production when default secret is used")
+    void shouldThrowExceptionInProdWithDefaultSecret() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                new JwtTokenProvider(JwtTokenProvider.DEFAULT_SECRET, 3600000L, "prod")
+        );
+    }
+
+    @Test
+    @DisplayName("Should succeed in production when secure custom secret is provided")
+    void shouldSucceedInProdWithCustomSecret() {
+        String prodSecret = "production-invoicely-enterprise-secret-key-must-be-at-least-256-bits-long-987654321";
+        JwtTokenProvider provider = new JwtTokenProvider(prodSecret, 3600000L, "prod");
+        assertThat(provider).isNotNull();
+    }
 }

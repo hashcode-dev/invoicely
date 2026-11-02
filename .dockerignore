@@ -1,0 +1,10 @@
+.git
+.gitignore
+.gitattributes
+.idea
+target
+logs
+*.log
+.DS_Store
+*.md
+production_readiness_fix_plan.md

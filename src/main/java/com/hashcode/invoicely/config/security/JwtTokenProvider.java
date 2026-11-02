@@ -15,12 +15,26 @@ import java.util.UUID;
 @Component
 public class JwtTokenProvider {
 
+    public static final String DEFAULT_SECRET = "invoicely-enterprise-secret-key-must-be-at-least-256-bits-long";
+
     private final SecretKey secretKey;
     private final long validityInMilliseconds;
 
+    public JwtTokenProvider(String secret, long validityInMilliseconds) {
+        this(secret, validityInMilliseconds, "test");
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     public JwtTokenProvider(
-            @Value("${invoicely.jwt.secret:invoicely-enterprise-secret-key-must-be-at-least-256-bits-long}") String secret,
-            @Value("${invoicely.jwt.expiration-ms:86400000}") long validityInMilliseconds) { // default 24h
+            @Value("${invoicely.jwt.secret:" + DEFAULT_SECRET + "}") String secret,
+            @Value("${invoicely.jwt.expiration-ms:86400000}") long validityInMilliseconds,
+            @Value("${spring.profiles.active:default}") String activeProfile) {
+        if (activeProfile != null && activeProfile.contains("prod")) {
+            if (secret == null || secret.isBlank() || DEFAULT_SECRET.equals(secret.trim())) {
+                throw new IllegalStateException(
+                        "CRITICAL SECURITY VIOLATION: Production profile requires a custom, high-entropy invoicely.jwt.secret to be configured.");
+            }
+        }
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.validityInMilliseconds = validityInMilliseconds;
     }

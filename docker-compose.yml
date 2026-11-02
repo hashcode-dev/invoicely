@@ -1,0 +1,58 @@
+services:
+  invoicely-postgres:
+    image: postgres:16-alpine
+    container_name: invoicely-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: invoicely
+      POSTGRES_USER: invoicely
+      POSTGRES_PASSWORD: invoicely_secure_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoicely -d invoicely"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  invoicely-mongo:
+    image: mongo:7.0
+    container_name: invoicely-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  invoicely-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invoicely-api
+    restart: unless-stopped
+    depends_on:
+      invoicely-postgres:
+        condition: service_healthy
+      invoicely-mongo:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SUPABASE_DB_HOST: jdbc:postgresql://invoicely-postgres:5432/invoicely
+      SUPABASE_DB_USER: invoicely
+      SUPABASE_DB_PASSWORD: invoicely_secure_password
+      MONGODB_URL: mongodb://invoicely-mongo:27017/invoicely
+      INVOICELY_JWT_SECRET: c2VjdXJlLWVudGVycHJpc2Utand0LXNlY3JldC1rZXktbXVzdC1iZS1hdC1sZWFzdC0yNTYtYml0cw==
+      CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:5173
+
+volumes:
+  postgres_data:
+  mongo_data:

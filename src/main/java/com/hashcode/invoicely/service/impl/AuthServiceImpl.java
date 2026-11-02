@@ -56,6 +56,12 @@ public class AuthServiceImpl implements AuthService {
     private final AuthMapper authMapper;
     private final ObjectMapper objectMapper;
 
+    @org.springframework.beans.factory.annotation.Value("${invoicely.auth.google.enforce-verification:false}")
+    private boolean enforceGoogleVerification;
+
+    @org.springframework.beans.factory.annotation.Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     @Override
     @Transactional(readOnly = true)
     public LoginPrecheckResponse precheck(LoginPrecheckRequest request) {
@@ -167,6 +173,11 @@ public class AuthServiceImpl implements AuthService {
     public ApiResponse<List<CompanyUserResponse>> loginWithGoogle(GoogleLoginRequest request) {
         if (request == null) {
             throw new BadCredentialsException("Google authentication request cannot be empty");
+        }
+
+        boolean isProduction = (activeProfile != null && activeProfile.contains("prod")) || enforceGoogleVerification;
+        if (isProduction && (request.getIdToken() == null || request.getIdToken().isBlank())) {
+            throw new BadCredentialsException("A verified Google ID token is required for authentication in production.");
         }
 
         String email = request.getEmail();

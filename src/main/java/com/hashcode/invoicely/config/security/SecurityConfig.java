@@ -58,10 +58,13 @@ public class SecurityConfig {
                 .build();
     }
 
+    @org.springframework.beans.factory.annotation.Value("${invoicely.cors.allowed-origins:http://localhost:3000,http://localhost:8080,http://localhost:5173}")
+    private List<String> allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

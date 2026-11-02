@@ -2,6 +2,7 @@ package com.hashcode.invoicely.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 
 @Component
+@Profile("!prod")
 @RequiredArgsConstructor
 @Slf4j
 public class DemoDataInitializer implements CommandLineRunner {
